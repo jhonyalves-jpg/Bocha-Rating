@@ -44,7 +44,6 @@ button { cursor:pointer; }
 
 <h1>🏆 Ranking de Ratings</h1>
 
-<!-- =================== TABELA PÚBLICA =================== -->
 <table>
 <thead>
 <tr>
@@ -58,7 +57,6 @@ button { cursor:pointer; }
 <tbody id="ranking"></tbody>
 </table>
 
-<!-- =================== HISTÓRICO PÚBLICO =================== -->
 <div class="box">
 <h2>📜 Histórico de Partidas</h2>
 <table>
@@ -69,11 +67,9 @@ button { cursor:pointer; }
 </table>
 </div>
 
-<!-- =================== PAINEL ADMIN =================== -->
 <div class="admin-panel" id="adminPanel">
 <h2>⚙️ Painel Administrativo</h2>
 
-<!-- ➕ ADICIONAR JOGADOR (MOVIDO) -->
 <div class="box">
 <h2>➕ Adicionar Jogador</h2>
 <input id="novoNome" placeholder="Nome" />
@@ -83,7 +79,6 @@ button { cursor:pointer; }
 <button onclick="adicionarJogador()">Adicionar</button>
 </div>
 
-<!-- ♟️ REGISTRAR PARTIDA (MOVIDO) -->
 <div class="box">
 <h2>♟️ Registrar Partida</h2>
 <select id="jogadorA"></select>
@@ -96,7 +91,6 @@ button { cursor:pointer; }
 <button onclick="registrarPartida()">Salvar Partida</button>
 </div>
 
-<!-- TABELA ADMIN -->
 <table>
 <thead>
 <tr>
@@ -109,17 +103,17 @@ button { cursor:pointer; }
 </thead>
 <tbody id="adminTabela"></tbody>
 </table>
-
 </div>
 
 <button class="admin-toggle" onclick="toggleAdmin()">⚙️ Admin</button>
 
-<div class="footer">Sistema Elo • K=20 • Dados salvos no navegador</div>
+<div class="footer">Sistema Elo • K=20 • Dados globais via Firebase</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+/* 🔥 FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyCbiajdXpoQH72dLWv-qHmqx2-yYFggH4g",
   authDomain: "bocha-rating.firebaseapp.com",
@@ -132,12 +126,12 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* ==== DADOS ==== */
+/* ===== DADOS ===== */
 const K = 20;
 let jogadores = [];
 let historico = [];
 
-/* ==== FIREBASE ==== */
+/* ===== FIREBASE ===== */
 async function carregar(){
   const ref = doc(db, "bocha", "dados");
   const snap = await getDoc(ref);
@@ -157,17 +151,104 @@ async function salvar(){
   await setDoc(doc(db, "bocha", "dados"), { jogadores, historico });
 }
 
-/* ==== RESTO DO TEU CÓDIGO ==== */
+/* ===== ELO ===== */
 function esperado(ra, rb){
   return 1 / (1 + Math.pow(10,(rb-ra)/400));
 }
 
-/* (o resto das funções continuam iguais) */
+/* ===== UI ===== */
+function atualizarRanking(){
+  jogadores.sort((a,b)=>b.rating-a.rating);
+  ranking.innerHTML='';
+  jogadores.forEach((j,i)=>{
+    ranking.innerHTML += `
+    <tr>
+      <td>${i+1}</td>
+      <td>${j.nome}</td>
+      <td>${Math.round(j.rating)}</td>
+      <td>${j.v||0}</td>
+      <td>${j.d||0}</td>
+    </tr>`;
+  });
+  atualizarAdmin();
+  atualizarSelects();
+  salvar();
+}
 
+function atualizarAdmin(){
+  adminTabela.innerHTML='';
+  jogadores.forEach((j,i)=>{
+    adminTabela.innerHTML += `
+    <tr>
+      <td>${j.nome}</td>
+      <td><input type="number" value="${Math.round(j.rating)}" onchange="editarRating(${i},this.value)"></td>
+      <td><input type="number" value="${j.v||0}" onchange="editarVD(${i},'v',this.value)"></td>
+      <td><input type="number" value="${j.d||0}" onchange="editarVD(${i},'d',this.value)"></td>
+      <td><button class="btn-del" onclick="removerJogador(${i})">🗑️</button></td>
+    </tr>`;
+  });
+}
+
+function atualizarHistorico(){
+  historicoElem.innerHTML='';
+  historico.forEach(p=>{
+    historicoElem.innerHTML += `<tr><td>${p.a}</td><td>${p.r}</td><td>${p.b}</td></tr>`;
+  });
+}
+
+function atualizarSelects(){
+  jogadorA.innerHTML = jogadorB.innerHTML = '';
+  jogadores.forEach((j,i)=>{
+    jogadorA.innerHTML += `<option value="${i}">${j.nome}</option>`;
+    jogadorB.innerHTML += `<option value="${i}">${j.nome}</option>`;
+  });
+}
+
+/* ===== AÇÕES (EXPOSTAS) ===== */
+window.adicionarJogador = function(){
+  if(!novoNome.value.trim()) return alert('Nome inválido');
+  jogadores.push({
+    nome: novoNome.value,
+    rating: +novoRating.value,
+    v: +novoV.value,
+    d: +novoD.value
+  });
+  novoNome.value='';
+  atualizarRanking();
+}
+
+window.registrarPartida = function(){
+  if(jogadorA.value === jogadorB.value) return alert('Jogadores iguais');
+
+  const ia = jogadorA.value, ib = jogadorB.value;
+  const sa = +resultado.value, sb = 1-sa;
+
+  const ra = jogadores[ia].rating, rb = jogadores[ib].rating;
+  jogadores[ia].rating = ra + K*(sa-esperado(ra,rb));
+  jogadores[ib].rating = rb + K*(sb-esperado(rb,ra));
+
+  if(sa===1){ jogadores[ia].v++; jogadores[ib].d++; }
+  if(sa===0){ jogadores[ib].v++; jogadores[ia].d++; }
+
+  historico.unshift({
+    a:jogadores[ia].nome,
+    b:jogadores[ib].nome,
+    r: sa==1?'1-0':sa==0.5?'½-½':'0-1'
+  });
+
+  atualizarRanking();
+  atualizarHistorico();
+}
+
+window.editarVD = (i,c,v)=>{ jogadores[i][c]=+v||0; atualizarRanking(); }
+window.editarRating = (i,v)=>{ jogadores[i].rating=+v||jogadores[i].rating; atualizarRanking(); }
+window.removerJogador = i => { if(confirm('Remover?')){ jogadores.splice(i,1); atualizarRanking(); }}
+window.toggleAdmin = ()=> adminPanel.style.display = adminPanel.style.display==='block'?'none':'block';
+
+/* ===== INIT ===== */
 const historicoElem = document.getElementById('historico');
 carregar();
 </script>
-
 
 </body>
 </html>
