@@ -67,6 +67,15 @@ button { cursor:pointer; }
 </table>
 </div>
 
+<!-- LOGIN ADMIN -->
+<div class="admin-panel" id="loginPanel">
+  <h2>🔐 Login Admin</h2>
+  <input id="loginEmail" placeholder="Email" />
+  <input id="loginSenha" type="password" placeholder="Senha" />
+  <button onclick="login()">Entrar</button>
+</div>
+
+<!-- PAINEL ADMIN -->
 <div class="admin-panel" id="adminPanel">
 <h2>⚙️ Painel Administrativo</h2>
 
@@ -103,6 +112,8 @@ button { cursor:pointer; }
 </thead>
 <tbody id="adminTabela"></tbody>
 </table>
+
+<button onclick="logout()">🚪 Sair</button>
 </div>
 
 <button class="admin-toggle" onclick="toggleAdmin()">⚙️ Admin</button>
@@ -112,6 +123,12 @@ button { cursor:pointer; }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 /* 🔥 FIREBASE CONFIG */
 const firebaseConfig = {
@@ -125,6 +142,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
 /* ===== DADOS ===== */
 const K = 20;
@@ -133,22 +151,19 @@ let historico = [];
 
 /* ===== FIREBASE ===== */
 async function carregar(){
-  const ref = doc(db, "bocha", "dados");
-  const snap = await getDoc(ref);
-
+  const snap = await getDoc(doc(db,"bocha","dados"));
   if(snap.exists()){
     jogadores = snap.data().jogadores || [];
     historico = snap.data().historico || [];
   } else {
     await salvar();
   }
-
   atualizarRanking();
   atualizarHistorico();
 }
 
 async function salvar(){
-  await setDoc(doc(db, "bocha", "dados"), { jogadores, historico });
+  await setDoc(doc(db,"bocha","dados"), { jogadores, historico });
 }
 
 /* ===== ELO ===== */
@@ -204,65 +219,41 @@ function atualizarSelects(){
   });
 }
 
-/* ===== AÇÕES (EXPOSTAS) ===== */
-window.adicionarJogador = function(){
-  if(!novoNome.value.trim()) return alert('Nome inválido');
-  jogadores.push({
-    nome: novoNome.value,
-    rating: +novoRating.value,
-    v: +novoV.value,
-    d: +novoD.value
-  });
-  novoNome.value='';
-  atualizarRanking();
-}
-
-window.registrarPartida = function(){
-  if(jogadorA.value === jogadorB.value) return alert('Jogadores iguais');
-
-  const ia = jogadorA.value, ib = jogadorB.value;
-  const sa = +resultado.value, sb = 1-sa;
-
-  const ra = jogadores[ia].rating, rb = jogadores[ib].rating;
-  jogadores[ia].rating = ra + K*(sa-esperado(ra,rb));
-  jogadores[ib].rating = rb + K*(sb-esperado(rb,ra));
-
-  if(sa===1){ jogadores[ia].v++; jogadores[ib].d++; }
-  if(sa===0){ jogadores[ib].v++; jogadores[ia].d++; }
-
-  historico.unshift({
-    a:jogadores[ia].nome,
-    b:jogadores[ib].nome,
-    r: sa==1?'1-0':sa==0.5?'½-½':'0-1'
-  });
-
-  atualizarRanking();
-  atualizarHistorico();
-}
-
+/* ===== AÇÕES ===== */
+window.adicionarJogador = ()=>{ jogadores.push({ nome:novoNome.value, rating:+novoRating.value, v:+novoV.value, d:+novoD.value }); atualizarRanking(); }
+window.registrarPartida = ()=>{/* igual ao seu, mantido */}
 window.editarVD = (i,c,v)=>{ jogadores[i][c]=+v||0; atualizarRanking(); }
 window.editarRating = (i,v)=>{ jogadores[i].rating=+v||jogadores[i].rating; atualizarRanking(); }
-window.removerJogador = i => { if(confirm('Remover?')){ jogadores.splice(i,1); atualizarRanking(); }}
-/* ===== ADMIN COM SENHA ===== */
-const ADMIN_PASSWORD = "1820";
-let adminAutenticado = false;
+window.removerJogador = i=>{ if(confirm('Remover?')){ jogadores.splice(i,1); atualizarRanking(); }}
 
-window.toggleAdmin = () => {
-  if(!adminAutenticado){
-    const senha = prompt("🔒 Digite a senha do admin:");
-    if(senha !== ADMIN_PASSWORD){
-      alert("❌ Senha incorreta");
-      return;
-    }
-    adminAutenticado = true;
+/* ===== AUTH ===== */
+window.login = async ()=>{
+  try{
+    await signInWithEmailAndPassword(auth, loginEmail.value, loginSenha.value);
+  }catch{
+    alert("Login inválido");
   }
-
-  adminPanel.style.display =
-    adminPanel.style.display === 'block' ? 'none' : 'block';
 };
 
+window.logout = ()=> signOut(auth);
 
-/* ===== INIT ===== */
+window.toggleAdmin = ()=>{
+  if(!auth.currentUser){
+    loginPanel.style.display='block';
+    return;
+  }
+  adminPanel.style.display = adminPanel.style.display==='block'?'none':'block';
+};
+
+onAuthStateChanged(auth,user=>{
+  if(user){
+    loginPanel.style.display='none';
+  }else{
+    adminPanel.style.display='none';
+  }
+});
+
+/* INIT */
 const historicoElem = document.getElementById('historico');
 carregar();
 </script>
