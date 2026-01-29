@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ratings da Bocha</title>
+  <title>Ratings de Xadrez</title>
   <style>
     body { font-family: Arial, Helvetica, sans-serif; background:#f4f6f8; margin:0; padding:20px; }
     h1,h2 { text-align:center; }
@@ -71,13 +71,13 @@ if(!localStorage.getItem('ajusteVD_v1')){
   const ajuste = {
     "Vicente": {v:2,d:0},
     "Jhony": {v:2,d:0},
-    "Arcari": {v:1,d:1},
     "Bruno": {v:1,d:1},
     "Shigaki": {v:1,d:1},
     "Thor": {v:1,d:1},
     "Aldemir": {v:0,d:2},
     "Vitor": {v:0,d:2}
   };
+  jogadores = jogadores.filter(j => j.nome !== 'Arcari');
   jogadores.forEach(j => {
     if(ajuste[j.nome]){
       j.v = ajuste[j.nome].v;
