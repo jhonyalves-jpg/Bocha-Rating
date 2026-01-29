@@ -65,6 +65,27 @@
 
 // Garante V/D para jogadores antigos
 jogadores.forEach(j => { j.v ??= 0; j.d ??= 0; });
+
+// Ajuste manual inicial de V/D (executa uma vez)
+if(!localStorage.getItem('ajusteVD_v1')){
+  const ajuste = {
+    "Vicente": {v:2,d:0},
+    "Jhony": {v:2,d:0},
+    "Arcaria": {v:1,d:1},
+    "Bruno": {v:1,d:1},
+    "Shigaki": {v:1,d:1},
+    "Thor": {v:1,d:1},
+    "Aldemir": {v:0,d:2},
+    "Vitor": {v:0,d:2}
+  };
+  jogadores.forEach(j => {
+    if(ajuste[j.nome]){
+      j.v = ajuste[j.nome].v;
+      j.d = ajuste[j.nome].d;
+    }
+  });
+  localStorage.setItem('ajusteVD_v1', 'ok');
+}
   let historico = JSON.parse(localStorage.getItem('historico')) || [];
 
   function salvar(){ 
