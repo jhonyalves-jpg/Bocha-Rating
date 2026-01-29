@@ -36,7 +36,6 @@ button { cursor:pointer; }
   box-shadow:0 2px 6px rgba(0,0,0,.2);
   border:2px dashed #444;
 }
-.footer { text-align:center; font-size:14px; color:#666; margin-top:30px; }
 </style>
 </head>
 
@@ -47,11 +46,7 @@ button { cursor:pointer; }
 <table>
 <thead>
 <tr>
-  <th>#</th>
-  <th>Jogador</th>
-  <th>Rating</th>
-  <th>V</th>
-  <th>D</th>
+  <th>#</th><th>Jogador</th><th>Rating</th><th>V</th><th>D</th>
 </tr>
 </thead>
 <tbody id="ranking"></tbody>
@@ -60,36 +55,32 @@ button { cursor:pointer; }
 <div class="box">
 <h2>📜 Histórico de Partidas</h2>
 <table>
-<thead>
-<tr><th>Jogador A</th><th>Resultado</th><th>Jogador B</th></tr>
-</thead>
+<thead><tr><th>A</th><th>Resultado</th><th>B</th></tr></thead>
 <tbody id="historico"></tbody>
 </table>
 </div>
 
-<!-- LOGIN ADMIN -->
+<!-- LOGIN -->
 <div class="admin-panel" id="loginPanel">
   <h2>🔐 Login Admin</h2>
-  <input id="loginEmail" placeholder="Email" />
-  <input id="loginSenha" type="password" placeholder="Senha" />
+  <input id="loginEmail" placeholder="Email">
+  <input id="loginSenha" type="password" placeholder="Senha">
   <button onclick="login()">Entrar</button>
 </div>
 
-<!-- PAINEL ADMIN -->
+<!-- ADMIN -->
 <div class="admin-panel" id="adminPanel">
 <h2>⚙️ Painel Administrativo</h2>
 
 <div class="box">
-<h2>➕ Adicionar Jogador</h2>
-<input id="novoNome" placeholder="Nome" />
-<input id="novoRating" type="number" value="1500" />
-<input id="novoV" type="number" value="0" />
-<input id="novoD" type="number" value="0" />
-<button onclick="adicionarJogador()">Adicionar</button>
+<input id="novoNome" placeholder="Nome">
+<input id="novoRating" type="number" value="1500">
+<input id="novoV" type="number" value="0">
+<input id="novoD" type="number" value="0">
+<button onclick="adicionarJogador()">Adicionar Jogador</button>
 </div>
 
 <div class="box">
-<h2>♟️ Registrar Partida</h2>
 <select id="jogadorA"></select>
 <select id="resultado">
   <option value="1">Vitória A</option>
@@ -102,13 +93,7 @@ button { cursor:pointer; }
 
 <table>
 <thead>
-<tr>
-  <th>Jogador</th>
-  <th>Rating</th>
-  <th>V</th>
-  <th>D</th>
-  <th>Ações</th>
-</tr>
+<tr><th>Jogador</th><th>Rating</th><th>V</th><th>D</th><th>Ações</th></tr>
 </thead>
 <tbody id="adminTabela"></tbody>
 </table>
@@ -116,21 +101,13 @@ button { cursor:pointer; }
 <button onclick="logout()">🚪 Sair</button>
 </div>
 
-<button class="admin-toggle" onclick="toggleAdmin()">⚙️ Admin</button>
-
-<div class="footer">Sistema Elo • K=20 • Dados globais via Firebase</div>
+<button class="admin-toggle" onclick="toggleAdmin()">⚙️</button>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import {
-  getAuth,
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-/* 🔥 FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyCbiajdXpoQH72dLWv-qHmqx2-yYFggH4g",
   authDomain: "bocha-rating.firebaseapp.com",
@@ -144,117 +121,103 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-/* ===== DADOS ===== */
 const K = 20;
 let jogadores = [];
 let historico = [];
 
-/* ===== FIREBASE ===== */
+const esperado = (ra,rb)=>1/(1+Math.pow(10,(rb-ra)/400));
+
 async function carregar(){
   const snap = await getDoc(doc(db,"bocha","dados"));
   if(snap.exists()){
     jogadores = snap.data().jogadores || [];
     historico = snap.data().historico || [];
-  } else {
-    await salvar();
   }
-  atualizarRanking();
-  atualizarHistorico();
+  atualizarTudo();
 }
 
 async function salvar(){
-  await setDoc(doc(db,"bocha","dados"), { jogadores, historico });
+  await setDoc(doc(db,"bocha","dados"),{ jogadores, historico });
 }
 
-/* ===== ELO ===== */
-function esperado(ra, rb){
-  return 1 / (1 + Math.pow(10,(rb-ra)/400));
-}
-
-/* ===== UI ===== */
-function atualizarRanking(){
-  jogadores.sort((a,b)=>b.rating-a.rating);
-  ranking.innerHTML='';
-  jogadores.forEach((j,i)=>{
-    ranking.innerHTML += `
-    <tr>
-      <td>${i+1}</td>
-      <td>${j.nome}</td>
-      <td>${Math.round(j.rating)}</td>
-      <td>${j.v||0}</td>
-      <td>${j.d||0}</td>
-    </tr>`;
-  });
+function atualizarTudo(){
+  atualizarRanking();
   atualizarAdmin();
   atualizarSelects();
+  atualizarHistorico();
   salvar();
+}
+
+function atualizarRanking(){
+  ranking.innerHTML='';
+  jogadores.sort((a,b)=>b.rating-a.rating).forEach((j,i)=>{
+    ranking.innerHTML+=`<tr><td>${i+1}</td><td>${j.nome}</td><td>${Math.round(j.rating)}</td><td>${j.v||0}</td><td>${j.d||0}</td></tr>`;
+  });
 }
 
 function atualizarAdmin(){
   adminTabela.innerHTML='';
   jogadores.forEach((j,i)=>{
-    adminTabela.innerHTML += `
+    adminTabela.innerHTML+=`
     <tr>
       <td>${j.nome}</td>
-      <td><input type="number" value="${Math.round(j.rating)}" onchange="editarRating(${i},this.value)"></td>
-      <td><input type="number" value="${j.v||0}" onchange="editarVD(${i},'v',this.value)"></td>
-      <td><input type="number" value="${j.d||0}" onchange="editarVD(${i},'d',this.value)"></td>
-      <td><button class="btn-del" onclick="removerJogador(${i})">🗑️</button></td>
+      <td><input value="${Math.round(j.rating)}" onchange="editarRating(${i},this.value)"></td>
+      <td><input value="${j.v||0}" onchange="editarVD(${i},'v',this.value)"></td>
+      <td><input value="${j.d||0}" onchange="editarVD(${i},'d',this.value)"></td>
+      <td><button onclick="removerJogador(${i})">🗑️</button></td>
     </tr>`;
+  });
+}
+
+function atualizarSelects(){
+  jogadorA.innerHTML=jogadorB.innerHTML='';
+  jogadores.forEach((j,i)=>{
+    jogadorA.innerHTML+=`<option value="${i}">${j.nome}</option>`;
+    jogadorB.innerHTML+=`<option value="${i}">${j.nome}</option>`;
   });
 }
 
 function atualizarHistorico(){
   historicoElem.innerHTML='';
   historico.forEach(p=>{
-    historicoElem.innerHTML += `<tr><td>${p.a}</td><td>${p.r}</td><td>${p.b}</td></tr>`;
-  });
-}
-
-function atualizarSelects(){
-  jogadorA.innerHTML = jogadorB.innerHTML = '';
-  jogadores.forEach((j,i)=>{
-    jogadorA.innerHTML += `<option value="${i}">${j.nome}</option>`;
-    jogadorB.innerHTML += `<option value="${i}">${j.nome}</option>`;
+    historicoElem.innerHTML+=`<tr><td>${p.a}</td><td>${p.r}</td><td>${p.b}</td></tr>`;
   });
 }
 
 /* ===== AÇÕES ===== */
-window.adicionarJogador = ()=>{ jogadores.push({ nome:novoNome.value, rating:+novoRating.value, v:+novoV.value, d:+novoD.value }); atualizarRanking(); }
-window.registrarPartida = ()=>{/* igual ao seu, mantido */}
-window.editarVD = (i,c,v)=>{ jogadores[i][c]=+v||0; atualizarRanking(); }
-window.editarRating = (i,v)=>{ jogadores[i].rating=+v||jogadores[i].rating; atualizarRanking(); }
-window.removerJogador = i=>{ if(confirm('Remover?')){ jogadores.splice(i,1); atualizarRanking(); }}
-
-/* ===== AUTH ===== */
-window.login = async ()=>{
-  try{
-    await signInWithEmailAndPassword(auth, loginEmail.value, loginSenha.value);
-  }catch{
-    alert("Login inválido");
-  }
+window.adicionarJogador=()=>{
+  jogadores.push({nome:novoNome.value,rating:+novoRating.value,v:+novoV.value,d:+novoD.value});
+  atualizarTudo();
 };
 
-window.logout = ()=> signOut(auth);
+window.registrarPartida=()=>{
+  if(jogadorA.value===jogadorB.value) return alert("Jogadores iguais");
 
-window.toggleAdmin = ()=>{
-  if(!auth.currentUser){
-    loginPanel.style.display='block';
-    return;
-  }
-  adminPanel.style.display = adminPanel.style.display==='block'?'none':'block';
+  const ia=+jogadorA.value, ib=+jogadorB.value;
+  const sa=+resultado.value, sb=1-sa;
+
+  const ra=jogadores[ia].rating, rb=jogadores[ib].rating;
+  jogadores[ia].rating=ra+K*(sa-esperado(ra,rb));
+  jogadores[ib].rating=rb+K*(sb-esperado(rb,ra));
+
+  if(sa===1){jogadores[ia].v++;jogadores[ib].d++;}
+  if(sa===0){jogadores[ib].v++;jogadores[ia].d++;}
+
+  historico.unshift({a:jogadores[ia].nome,b:jogadores[ib].nome,r:sa==1?"1-0":sa==0.5?"½-½":"0-1"});
+  atualizarTudo();
 };
 
-onAuthStateChanged(auth,user=>{
-  if(user){
-    loginPanel.style.display='none';
-  }else{
-    adminPanel.style.display='none';
-  }
-});
+window.editarVD=(i,c,v)=>{jogadores[i][c]=+v||0;atualizarTudo();}
+window.editarRating=(i,v)=>{jogadores[i].rating=+v||jogadores[i].rating;atualizarTudo();}
+window.removerJogador=i=>{if(confirm("Remover?")){jogadores.splice(i,1);atualizarTudo();}}
 
-/* INIT */
-const historicoElem = document.getElementById('historico');
+window.login=async()=>{try{await signInWithEmailAndPassword(auth,loginEmail.value,loginSenha.value);}catch{alert("Login inválido");}}
+window.logout=()=>signOut(auth);
+window.toggleAdmin=()=>{if(!auth.currentUser){loginPanel.style.display='block';return;}adminPanel.style.display=adminPanel.style.display==='block'?'none':'block';}
+
+onAuthStateChanged(auth,u=>{loginPanel.style.display=u?'none':'block';adminPanel.style.display='none';});
+
+const historicoElem=document.getElementById("historico");
 carregar();
 </script>
 
