@@ -1,252 +1,220 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ratings da Bocha</title>
-  <style>
-    body { font-family: Arial, Helvetica, sans-serif; background:#f4f6f8; margin:0; padding:20px; }
-    h1,h2 { text-align:center; }
-    table { width:100%; max-width:900px; margin:20px auto; border-collapse:collapse; background:#fff; box-shadow:0 2px 6px rgba(0,0,0,.1);}    
-    th,td { padding:8px; text-align:center; border-bottom:1px solid #ddd; }
-    th { background:#222; color:#fff; }
-    tr:nth-child(even){ background:#f2f2f2; }
-    .box { max-width:900px; margin:20px auto; background:#fff; padding:15px; box-shadow:0 2px 6px rgba(0,0,0,.1); }
-    input, select, button { padding:6px; margin:3px; }
-    button { cursor:pointer; }
-    .btn-del { background:#c0392b; color:#fff; border:none; padding:5px 8px; }
-    .footer { text-align:center; font-size:14px; color:#666; margin-top:30px; }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ratings da Bocha</title>
 
-    .admin-toggle {
-      position:fixed;
-      bottom:20px;
-      right:20px;
-      background:#222;
-      color:#fff;
-      border:none;
-      padding:10px 14px;
-      border-radius:50px;
-    }
-    .admin-panel {
-      display:none;
-      max-width:900px;
-      margin:30px auto;
-      background:#fff;
-      padding:15px;
-      box-shadow:0 2px 6px rgba(0,0,0,.2);
-      border:2px dashed #444;
-    }
-  </style>
+<style>
+body { font-family: Arial, Helvetica, sans-serif; background:#f4f6f8; margin:0; padding:20px; }
+h1,h2 { text-align:center; }
+table { width:100%; max-width:900px; margin:20px auto; border-collapse:collapse; background:#fff; box-shadow:0 2px 6px rgba(0,0,0,.1);}    
+th,td { padding:8px; text-align:center; border-bottom:1px solid #ddd; }
+th { background:#222; color:#fff; }
+tr:nth-child(even){ background:#f2f2f2; }
+.box { max-width:900px; margin:20px auto; background:#fff; padding:15px; box-shadow:0 2px 6px rgba(0,0,0,.1); }
+input, select, button { padding:6px; margin:3px; }
+button { cursor:pointer; }
+.btn-del { background:#c0392b; color:#fff; border:none; padding:5px 8px; }
+
+.admin-toggle {
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  background:#222;
+  color:#fff;
+  border:none;
+  padding:10px 14px;
+  border-radius:50px;
+}
+.admin-panel {
+  display:none;
+  max-width:900px;
+  margin:30px auto;
+  background:#fff;
+  padding:15px;
+  box-shadow:0 2px 6px rgba(0,0,0,.2);
+  border:2px dashed #444;
+}
+.footer { text-align:center; font-size:14px; color:#666; margin-top:30px; }
+</style>
 </head>
+
 <body>
 
 <h1>🏆 Ranking de Ratings</h1>
 
-<div class="box">
-  <h2>➕ Adicionar Jogador</h2>
-  <input id="novoNome" placeholder="Nome" />
-  <input id="novoRating" type="number" placeholder="Rating" value="1500" />
-  <input id="novoV" type="number" placeholder="Vitórias" value="0" />
-  <input id="novoD" type="number" placeholder="Derrotas" value="0" />
-  <button onclick="adicionarJogador()">Adicionar</button>
-</div>
-
-<div class="box">
-  <h2>♟️ Registrar Partida</h2>
-  <select id="jogadorA"></select>
-  <select id="resultado">
-    <option value="1">Vitória A</option>
-    <option value="0.5">Empate</option>
-    <option value="0">Derrota A</option>
-  </select>
-  <select id="jogadorB"></select>
-  <button onclick="registrarPartida()">Salvar Partida</button>
-</div>
-
-<!-- TABELA PÚBLICA -->
+<!-- =================== TABELA PÚBLICA =================== -->
 <table>
-  <thead>
-    <tr>
-      <th>#</th>
-      <th>Jogador</th>
-      <th>Rating</th>
-      <th>V</th>
-      <th>D</th>
-    </tr>
-  </thead>
-  <tbody id="ranking"></tbody>
+<thead>
+<tr>
+  <th>#</th>
+  <th>Jogador</th>
+  <th>Rating</th>
+  <th>V</th>
+  <th>D</th>
+</tr>
+</thead>
+<tbody id="ranking"></tbody>
 </table>
 
-<!-- PAINEL ADMIN -->
+<!-- =================== HISTÓRICO PÚBLICO =================== -->
+<div class="box">
+<h2>📜 Histórico de Partidas</h2>
+<table>
+<thead>
+<tr><th>Jogador A</th><th>Resultado</th><th>Jogador B</th></tr>
+</thead>
+<tbody id="historico"></tbody>
+</table>
+</div>
+
+<!-- =================== PAINEL ADMIN =================== -->
 <div class="admin-panel" id="adminPanel">
-  <h2>⚙️ Painel Administrativo</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Jogador</th>
-        <th>Rating</th>
-        <th>V</th>
-        <th>D</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody id="adminTabela"></tbody>
-  </table>
+<h2>⚙️ Painel Administrativo</h2>
+
+<!-- ➕ ADICIONAR JOGADOR (MOVIDO) -->
+<div class="box">
+<h2>➕ Adicionar Jogador</h2>
+<input id="novoNome" placeholder="Nome" />
+<input id="novoRating" type="number" value="1500" />
+<input id="novoV" type="number" value="0" />
+<input id="novoD" type="number" value="0" />
+<button onclick="adicionarJogador()">Adicionar</button>
+</div>
+
+<!-- ♟️ REGISTRAR PARTIDA (MOVIDO) -->
+<div class="box">
+<h2>♟️ Registrar Partida</h2>
+<select id="jogadorA"></select>
+<select id="resultado">
+  <option value="1">Vitória A</option>
+  <option value="0.5">Empate</option>
+  <option value="0">Derrota A</option>
+</select>
+<select id="jogadorB"></select>
+<button onclick="registrarPartida()">Salvar Partida</button>
+</div>
+
+<!-- TABELA ADMIN -->
+<table>
+<thead>
+<tr>
+  <th>Jogador</th>
+  <th>Rating</th>
+  <th>V</th>
+  <th>D</th>
+  <th>Ações</th>
+</tr>
+</thead>
+<tbody id="adminTabela"></tbody>
+</table>
+
 </div>
 
 <button class="admin-toggle" onclick="toggleAdmin()">⚙️ Admin</button>
 
-<div class="box">
-  <h2>📜 Histórico de Partidas</h2>
-  <table style="max-width:100%">
-    <thead>
-      <tr><th>Jogador A</th><th>Resultado</th><th>Jogador B</th></tr>
-    </thead>
-    <tbody id="historico"></tbody>
-  </table>
-</div>
-
-<div class="footer">Sistema de rating Elo • K=20 • Dados salvos no navegador</div>
+<div class="footer">Sistema Elo • K=20 • Dados salvos no navegador</div>
 
 <script>
-  const K = 20;
+const K = 20;
+let jogadores = JSON.parse(localStorage.getItem('jogadores')) || [];
+let historico = JSON.parse(localStorage.getItem('historico')) || [];
 
-  let jogadores = JSON.parse(localStorage.getItem('jogadores')) || [];
-  let historico = JSON.parse(localStorage.getItem('historico')) || [];
+jogadores.forEach(j => { j.v ??= 0; j.d ??= 0; });
 
-  jogadores.forEach(j => { j.v ??= 0; j.d ??= 0; });
+function salvar(){
+  localStorage.setItem('jogadores', JSON.stringify(jogadores));
+  localStorage.setItem('historico', JSON.stringify(historico));
+}
 
-  function salvar(){
-    localStorage.setItem('jogadores', JSON.stringify(jogadores));
-    localStorage.setItem('historico', JSON.stringify(historico));
-  }
+function esperado(ra, rb){
+  return 1 / (1 + Math.pow(10,(rb-ra)/400));
+}
 
-  function esperado(ra, rb){
-    return 1 / (1 + Math.pow(10,(rb-ra)/400));
-  }
+function atualizarRanking(){
+  jogadores.sort((a,b)=>b.rating-a.rating);
+  ranking.innerHTML='';
+  jogadores.forEach((j,i)=>{
+    ranking.innerHTML += `
+    <tr>
+      <td>${i+1}</td>
+      <td>${j.nome}</td>
+      <td>${Math.round(j.rating)}</td>
+      <td>${j.v}</td>
+      <td>${j.d}</td>
+    </tr>`;
+  });
+  atualizarAdmin();
+  atualizarSelects();
+  salvar();
+}
 
-  function atualizarRanking(){
-    jogadores.sort((a,b)=>b.rating-a.rating);
-    const tbody = document.getElementById('ranking');
-    tbody.innerHTML='';
+function atualizarAdmin(){
+  adminTabela.innerHTML='';
+  jogadores.forEach((j,i)=>{
+    adminTabela.innerHTML += `
+    <tr>
+      <td>${j.nome}</td>
+      <td><input type="number" value="${Math.round(j.rating)}" onchange="editarRating(${i},this.value)"></td>
+      <td><input type="number" value="${j.v}" onchange="editarVD(${i},'v',this.value)"></td>
+      <td><input type="number" value="${j.d}" onchange="editarVD(${i},'d',this.value)"></td>
+      <td><button class="btn-del" onclick="removerJogador(${i})">🗑️</button></td>
+    </tr>`;
+  });
+}
 
-    jogadores.forEach((j,i)=>{
-      tbody.innerHTML += `
-        <tr>
-          <td>${i+1}</td>
-          <td>${j.nome}</td>
-          <td>${Math.round(j.rating)}</td>
-          <td>${j.v}</td>
-          <td>${j.d}</td>
-        </tr>`;
-    });
+function atualizarHistorico(){
+  historicoElem.innerHTML='';
+  historico.forEach(p=>{
+    historicoElem.innerHTML += `<tr><td>${p.a}</td><td>${p.r}</td><td>${p.b}</td></tr>`;
+  });
+}
 
-    atualizarAdmin();
-    atualizarSelects();
-    salvar();
-  }
+function atualizarSelects(){
+  jogadorA.innerHTML = jogadorB.innerHTML = '';
+  jogadores.forEach((j,i)=>{
+    jogadorA.innerHTML += `<option value="${i}">${j.nome}</option>`;
+    jogadorB.innerHTML += `<option value="${i}">${j.nome}</option>`;
+  });
+}
 
-  function atualizarAdmin(){
-    const t = document.getElementById('adminTabela');
-    t.innerHTML='';
-    jogadores.forEach((j,i)=>{
-      t.innerHTML += `
-        <tr>
-          <td>${j.nome}</td>
-          <td>
-            <input type="number" value="${Math.round(j.rating)}"
-              onchange="editarRating(${i}, this.value)" style="width:80px">
-          </td>
-          <td><input type="number" value="${j.v}" onchange="editarVD(${i},'v',this.value)" style="width:60px"></td>
-          <td><input type="number" value="${j.d}" onchange="editarVD(${i},'d',this.value)" style="width:60px"></td>
-          <td><button class="btn-del" onclick="removerJogador(${i})">🗑️</button></td>
-        </tr>`;
-    });
-  }
-
-  function atualizarHistorico(){
-    const h = document.getElementById('historico');
-    h.innerHTML='';
-    historico.forEach(p=>{
-      h.innerHTML += `<tr><td>${p.a}</td><td>${p.r}</td><td>${p.b}</td></tr>`;
-    });
-  }
-
-  function atualizarSelects(){
-    const a = document.getElementById('jogadorA');
-    const b = document.getElementById('jogadorB');
-    a.innerHTML = b.innerHTML = '';
-    jogadores.forEach((j,i)=>{
-      a.innerHTML += `<option value="${i}">${j.nome}</option>`;
-      b.innerHTML += `<option value="${i}">${j.nome}</option>`;
-    });
-  }
-
-  function adicionarJogador(){
-    const nome = novoNome.value.trim();
-    if(!nome) return alert('Nome inválido');
-
-    jogadores.push({
-      nome,
-      rating: parseInt(novoRating.value),
-      v: parseInt(novoV.value),
-      d: parseInt(novoD.value)
-    });
-
-    novoNome.value='';
-    atualizarRanking();
-  }
-
-  function removerJogador(i){
-    if(!confirm('Remover este jogador?')) return;
-    jogadores.splice(i,1);
-    atualizarRanking();
-  }
-
-  function editarVD(i,campo,valor){
-    jogadores[i][campo] = parseInt(valor) || 0;
-    atualizarRanking();
-  }
-
-  function editarRating(i,valor){
-    jogadores[i].rating = parseInt(valor) || jogadores[i].rating;
-    atualizarRanking();
-  }
-
-  function registrarPartida(){
-    const ia = jogadorA.value;
-    const ib = jogadorB.value;
-    if(ia===ib) return alert('Jogadores iguais');
-
-    const sa = parseFloat(resultado.value);
-    const sb = 1 - sa;
-
-    const ra = jogadores[ia].rating;
-    const rb = jogadores[ib].rating;
-
-    const ea = esperado(ra, rb);
-    const eb = esperado(rb, ra);
-
-    jogadores[ia].rating = ra + K*(sa-ea);
-    jogadores[ib].rating = rb + K*(sb-eb);
-
-    if(sa === 1){ jogadores[ia].v++; jogadores[ib].d++; }
-    if(sa === 0){ jogadores[ib].v++; jogadores[ia].d++; }
-
-    const rtxt = sa==1 ? '1-0' : sa==0.5 ? '½-½' : '0-1';
-    historico.unshift({ a:jogadores[ia].nome, b:jogadores[ib].nome, r:rtxt });
-
-    atualizarRanking();
-    atualizarHistorico();
-  }
-
-  function toggleAdmin(){
-    const p = document.getElementById('adminPanel');
-    p.style.display = p.style.display === 'none' ? 'block' : 'none';
-  }
-
+function adicionarJogador(){
+  if(!novoNome.value.trim()) return alert('Nome inválido');
+  jogadores.push({
+    nome: novoNome.value,
+    rating: +novoRating.value,
+    v: +novoV.value,
+    d: +novoD.value
+  });
+  novoNome.value='';
   atualizarRanking();
-  atualizarHistorico();
+}
+
+function registrarPartida(){
+  if(jogadorA.value === jogadorB.value) return alert('Jogadores iguais');
+
+  const ia = jogadorA.value, ib = jogadorB.value;
+  const sa = +resultado.value, sb = 1-sa;
+
+  const ra = jogadores[ia].rating, rb = jogadores[ib].rating;
+  jogadores[ia].rating = ra + K*(sa-esperado(ra,rb));
+  jogadores[ib].rating = rb + K*(sb-esperado(rb,ra));
+
+  if(sa===1){ jogadores[ia].v++; jogadores[ib].d++; }
+  if(sa===0){ jogadores[ib].v++; jogadores[ia].d++; }
+
+  historico.unshift({a:jogadores[ia].nome, b:jogadores[ib].nome, r: sa==1?'1-0':sa==0.5?'½-½':'0-1'});
+  atualizarRanking(); atualizarHistorico();
+}
+
+function editarVD(i,c,v){ jogadores[i][c]=+v||0; atualizarRanking(); }
+function editarRating(i,v){ jogadores[i].rating=+v||jogadores[i].rating; atualizarRanking(); }
+function removerJogador(i){ if(confirm('Remover?')){ jogadores.splice(i,1); atualizarRanking(); }}
+function toggleAdmin(){ adminPanel.style.display = adminPanel.style.display==='block'?'none':'block'; }
+
+const historicoElem = document.getElementById('historico');
+atualizarRanking(); atualizarHistorico();
 </script>
 
 </body>
