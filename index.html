@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ratings da Bocha</title>
+  <title>Ratings de Xadrez</title>
   <style>
     body { font-family: Arial, Helvetica, sans-serif; background:#f4f6f8; margin:0; padding:20px; }
     h1,h2 { text-align:center; }
@@ -42,10 +42,20 @@
 
 <table>
   <thead>
-    <tr><th>#</th><th>Jogador</th><th>Rating</th></tr>
+    <tr><th>#</th><th>Jogador</th><th>Rating</th><th>V</th><th>D</th></tr>
   </thead>
   <tbody id="ranking"></tbody>
 </table>
+
+<div class="box">
+  <h2>📜 Histórico de Partidas</h2>
+  <table style="max-width:100%">
+    <thead>
+      <tr><th>Jogador A</th><th>Resultado</th><th>Jogador B</th></tr>
+    </thead>
+    <tbody id="historico"></tbody>
+  </table>
+</div>
 
 <div class="footer">Sistema de rating Elo • K=20 • Dados salvos no navegador</div>
 
@@ -53,7 +63,14 @@
   const K = 20;
   let jogadores = JSON.parse(localStorage.getItem('jogadores')) || [];
 
-  function salvar(){ localStorage.setItem('jogadores', JSON.stringify(jogadores)); }
+// Garante V/D para jogadores antigos
+jogadores.forEach(j => { j.v ??= 0; j.d ??= 0; });
+  let historico = JSON.parse(localStorage.getItem('historico')) || [];
+
+  function salvar(){ 
+    localStorage.setItem('jogadores', JSON.stringify(jogadores));
+    localStorage.setItem('historico', JSON.stringify(historico));
+  }
 
   function esperado(ra, rb){ return 1 / (1 + Math.pow(10,(rb-ra)/400)); }
 
@@ -62,10 +79,18 @@
     const tbody = document.getElementById('ranking');
     tbody.innerHTML='';
     jogadores.forEach((j,i)=>{
-      tbody.innerHTML += `<tr><td>${i+1}</td><td>${j.nome}</td><td>${Math.round(j.rating)}</td></tr>`;
+      tbody.innerHTML += `<tr><td>${i+1}</td><td>${j.nome}</td><td>${Math.round(j.rating)}</td><td>${j.v || 0}</td><td>${j.d || 0}</td></tr>`;
     });
     atualizarSelects();
     salvar();
+  }
+
+  function atualizarHistorico(){
+    const h = document.getElementById('historico');
+    h.innerHTML='';
+    historico.forEach(p=>{
+      h.innerHTML += `<tr><td>${p.a}</td><td>${p.r}</td><td>${p.b}</td></tr>`;
+    });
   }
 
   function atualizarSelects(){
@@ -82,7 +107,7 @@
     const nome = novoNome.value.trim();
     const rating = parseInt(novoRating.value);
     if(!nome) return alert('Nome inválido');
-    jogadores.push({nome, rating});
+    jogadores.push({ nome, rating, v: 0, d: 0 });
     novoNome.value='';
     atualizarRanking();
   }
@@ -103,10 +128,20 @@
     jogadores[ia].rating = ra + K*(sa-ea);
     jogadores[ib].rating = rb + K*(sb-eb);
 
+    // Atualiza vitórias e derrotas
+    if(sa === 1){ jogadores[ia].v++; jogadores[ib].d++; }
+    if(sa === 0){ jogadores[ib].v++; jogadores[ia].d++; }
+
+    let textoResultado = sa==1 ? '1-0' : sa==0.5 ? '½-½' : '0-1';
+
+    historico.unshift({ a: jogadores[ia].nome, b: jogadores[ib].nome, r: textoResultado });
+
     atualizarRanking();
+    atualizarHistorico();
   }
 
   atualizarRanking();
+  atualizarHistorico();
 </script>
 
 </body>
