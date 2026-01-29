@@ -15,7 +15,6 @@ tr:nth-child(even){ background:#f2f2f2; }
 .box { max-width:900px; margin:20px auto; background:#fff; padding:15px; box-shadow:0 2px 6px rgba(0,0,0,.1); }
 input, select, button { padding:6px; margin:3px; }
 button { cursor:pointer; }
-.btn-del { background:#c0392b; color:#fff; border:none; padding:5px 8px; }
 
 .admin-toggle {
   position:fixed;
@@ -35,6 +34,18 @@ button { cursor:pointer; }
   padding:15px;
   box-shadow:0 2px 6px rgba(0,0,0,.2);
   border:2px dashed #444;
+}
+
+/* Rodapé */
+.footer {
+  max-width:900px;
+  margin:40px auto 10px;
+  padding:12px;
+  text-align:center;
+  font-size:14px;
+  color:#555;
+  background:#fff;
+  box-shadow:0 2px 6px rgba(0,0,0,.1);
 }
 </style>
 </head>
@@ -103,6 +114,12 @@ button { cursor:pointer; }
 
 <button class="admin-toggle" onclick="toggleAdmin()">⚙️</button>
 
+<!-- RODAPÉ INFORMATIVO -->
+<div class="footer">
+  📊 Sistema de rating baseado no <strong>Elo Rating System</strong> com <strong>K = 20</strong>.<br>
+  Vitória = 1 ponto • Empate = 0,5 • Derrota = 0
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -125,7 +142,7 @@ const K = 20;
 let jogadores = [];
 let historico = [];
 
-const esperado = (ra,rb)=>1/(1+Math.pow(10,(rb-ra)/400));
+const esperado = (ra, rb) => 1 / (1 + Math.pow(10, (rb - ra) / 400));
 
 async function carregar(){
   const snap = await getDoc(doc(db,"bocha","dados"));
