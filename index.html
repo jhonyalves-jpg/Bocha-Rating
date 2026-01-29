@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ratings da Bocha</title>
+  <title>Ratings de Xadrez</title>
   <style>
     body { font-family: Arial, Helvetica, sans-serif; background:#f4f6f8; margin:0; padding:20px; }
     h1,h2 { text-align:center; }
@@ -134,12 +134,27 @@ if(!localStorage.getItem('ajusteVD_v1')){
   }
 
   function adicionarJogador(){
-  const nome = novoNome.value.trim();
-  const rating = parseInt(novoRating.value);
-  const v = parseInt(novoV.value) || 0;
-  const d = parseInt(novoD.value) || 0;
+  const nomeInput = document.getElementById('novoNome');
+  const ratingInput = document.getElementById('novoRating');
+  const vInput = document.getElementById('novoV');
+  const dInput = document.getElementById('novoD');
+
+  const nome = nomeInput.value.trim();
+  const rating = parseInt(ratingInput.value);
+  const v = parseInt(vInput.value) || 0;
+  const d = parseInt(dInput.value) || 0;
+
   if(!nome) return alert('Nome inválido');
+
   jogadores.push({ nome, rating, v, d });
+
+  nomeInput.value='';
+  ratingInput.value=1500;
+  vInput.value=0;
+  dInput.value=0;
+
+  atualizarRanking();
+});
   novoNome.value=''; novoRating.value=1500; novoV.value=0; novoD.value=0;
   atualizarRanking();
 });
