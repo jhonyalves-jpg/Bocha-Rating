@@ -243,7 +243,24 @@ window.registrarPartida = function(){
 window.editarVD = (i,c,v)=>{ jogadores[i][c]=+v||0; atualizarRanking(); }
 window.editarRating = (i,v)=>{ jogadores[i].rating=+v||jogadores[i].rating; atualizarRanking(); }
 window.removerJogador = i => { if(confirm('Remover?')){ jogadores.splice(i,1); atualizarRanking(); }}
-window.toggleAdmin = ()=> adminPanel.style.display = adminPanel.style.display==='block'?'none':'block';
+/* ===== ADMIN COM SENHA ===== */
+const ADMIN_PASSWORD = "1820";
+let adminAutenticado = false;
+
+window.toggleAdmin = () => {
+  if(!adminAutenticado){
+    const senha = prompt("🔒 Digite a senha do admin:");
+    if(senha !== ADMIN_PASSWORD){
+      alert("❌ Senha incorreta");
+      return;
+    }
+    adminAutenticado = true;
+  }
+
+  adminPanel.style.display =
+    adminPanel.style.display === 'block' ? 'none' : 'block';
+};
+
 
 /* ===== INIT ===== */
 const historicoElem = document.getElementById('historico');
