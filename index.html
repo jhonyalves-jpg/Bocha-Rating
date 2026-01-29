@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratings de Xadrez</title>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    table {
+      width: 100%;
+      max-width: 600px;
+      margin: 20px auto;
+      border-collapse: collapse;
+      background: white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    th, td {
+      padding: 12px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background: #222;
+      color: white;
+    }
+    tr:nth-child(even) {
+      background: #f2f2f2;
+    }
+    .footer {
+      text-align: center;
+      font-size: 14px;
+      color: #666;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🏆 Ranking de Ratings</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Jogador</th>
+      <th>Rating</th>
+    </tr>
+  </thead>
+  <tbody id="ranking"></tbody>
+</table>
+
+<div class="footer">
+  Sistema de rating K=20 • Atualizado manualmente
+</div>
+
+<script>
+  const jogadores = [
+    { nome: "Jhony", rating: 1600 },
+    { nome: "Bruno", rating: 1500 },
+    { nome: "Thor", rating: 1450 },
+    { nome: "Shigaki", rating: 1520 },
+    { nome: "Vicente", rating: 1480 },
+    { nome: "Arcari", rating: 1490 },
+    { nome: "Ademir", rating: 1400 },
+    { nome: "Vitor", rating: 1420 }
+  ];
+
+  jogadores.sort((a, b) => b.rating - a.rating);
+
+  const tbody = document.getElementById("ranking");
+
+  jogadores.forEach((jogador, index) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${index + 1}</td>
+      <td>${jogador.nome}</td>
+      <td>${jogador.rating}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+</script>
+
+</body>
+</html>
