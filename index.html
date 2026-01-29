@@ -17,7 +17,6 @@
     .btn-del { background:#c0392b; color:#fff; border:none; padding:5px 8px; }
     .footer { text-align:center; font-size:14px; color:#666; margin-top:30px; }
 
-    /* Admin */
     .admin-toggle {
       position:fixed;
       bottom:20px;
@@ -64,7 +63,7 @@
   <button onclick="registrarPartida()">Salvar Partida</button>
 </div>
 
-<!-- TABELA PUBLICA -->
+<!-- TABELA PÚBLICA -->
 <table>
   <thead>
     <tr>
@@ -154,7 +153,10 @@
       t.innerHTML += `
         <tr>
           <td>${j.nome}</td>
-          <td>${Math.round(j.rating)}</td>
+          <td>
+            <input type="number" value="${Math.round(j.rating)}"
+              onchange="editarRating(${i}, this.value)" style="width:80px">
+          </td>
           <td><input type="number" value="${j.v}" onchange="editarVD(${i},'v',this.value)" style="width:60px"></td>
           <td><input type="number" value="${j.d}" onchange="editarVD(${i},'d',this.value)" style="width:60px"></td>
           <td><button class="btn-del" onclick="removerJogador(${i})">🗑️</button></td>
@@ -203,7 +205,11 @@
 
   function editarVD(i,campo,valor){
     jogadores[i][campo] = parseInt(valor) || 0;
-    salvar();
+    atualizarRanking();
+  }
+
+  function editarRating(i,valor){
+    jogadores[i].rating = parseInt(valor) || jogadores[i].rating;
     atualizarRanking();
   }
 
