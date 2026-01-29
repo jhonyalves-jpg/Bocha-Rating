@@ -7,13 +7,14 @@
   <style>
     body { font-family: Arial, Helvetica, sans-serif; background:#f4f6f8; margin:0; padding:20px; }
     h1,h2 { text-align:center; }
-    table { width:100%; max-width:700px; margin:20px auto; border-collapse:collapse; background:#fff; box-shadow:0 2px 6px rgba(0,0,0,.1);}    
-    th,td { padding:10px; text-align:center; border-bottom:1px solid #ddd; }
+    table { width:100%; max-width:900px; margin:20px auto; border-collapse:collapse; background:#fff; box-shadow:0 2px 6px rgba(0,0,0,.1);}    
+    th,td { padding:8px; text-align:center; border-bottom:1px solid #ddd; }
     th { background:#222; color:#fff; }
     tr:nth-child(even){ background:#f2f2f2; }
-    .box { max-width:700px; margin:20px auto; background:#fff; padding:15px; box-shadow:0 2px 6px rgba(0,0,0,.1); }
-    input, select, button { padding:8px; margin:5px; }
+    .box { max-width:900px; margin:20px auto; background:#fff; padding:15px; box-shadow:0 2px 6px rgba(0,0,0,.1); }
+    input, select, button { padding:6px; margin:3px; }
     button { cursor:pointer; }
+    .btn-del { background:#c0392b; color:#fff; border:none; padding:5px 8px; }
     .footer { text-align:center; font-size:14px; color:#666; margin-top:30px; }
   </style>
 </head>
@@ -23,8 +24,10 @@
 
 <div class="box">
   <h2>➕ Adicionar Jogador</h2>
-  <input id="novoNome" placeholder="Nome do jogador" />
-  <input id="novoRating" type="number" placeholder="Rating inicial" value="1500" />
+  <input id="novoNome" placeholder="Nome" />
+  <input id="novoRating" type="number" placeholder="Rating" value="1500" />
+  <input id="novoV" type="number" placeholder="Vitórias" value="0" />
+  <input id="novoD" type="number" placeholder="Derrotas" value="0" />
   <button onclick="adicionarJogador()">Adicionar</button>
 </div>
 
@@ -42,7 +45,14 @@
 
 <table>
   <thead>
-    <tr><th>#</th><th>Jogador</th><th>Rating</th><th>V</th><th>D</th></tr>
+    <tr>
+      <th>#</th>
+      <th>Jogador</th>
+      <th>Rating</th>
+      <th>V</th>
+      <th>D</th>
+      <th>Ações</th>
+    </tr>
   </thead>
   <tbody id="ranking"></tbody>
 </table>
@@ -61,47 +71,38 @@
 
 <script>
   const K = 20;
+
   let jogadores = JSON.parse(localStorage.getItem('jogadores')) || [];
-
-// Garante V/D para jogadores antigos
-jogadores.forEach(j => { j.v ??= 0; j.d ??= 0; });
-
-// Ajuste manual inicial de V/D (executa uma vez)
-if(!localStorage.getItem('ajusteVD_v1')){
-  const ajuste = {
-    "Vicente": {v:2,d:0},
-    "Jhony": {v:2,d:0},
-    "Bruno": {v:1,d:1},
-    "Shigaki": {v:1,d:1},
-    "Thor": {v:1,d:1},
-    "Aldemir": {v:0,d:2},
-    "Vitor": {v:0,d:2}
-  };
-  jogadores = jogadores.filter(j => j.nome !== 'Arcari');
-  jogadores.forEach(j => {
-    if(ajuste[j.nome]){
-      j.v = ajuste[j.nome].v;
-      j.d = ajuste[j.nome].d;
-    }
-  });
-  localStorage.setItem('ajusteVD_v1', 'ok');
-}
   let historico = JSON.parse(localStorage.getItem('historico')) || [];
 
-  function salvar(){ 
+  jogadores.forEach(j => { j.v ??= 0; j.d ??= 0; });
+
+  function salvar(){
     localStorage.setItem('jogadores', JSON.stringify(jogadores));
     localStorage.setItem('historico', JSON.stringify(historico));
   }
 
-  function esperado(ra, rb){ return 1 / (1 + Math.pow(10,(rb-ra)/400)); }
+  function esperado(ra, rb){
+    return 1 / (1 + Math.pow(10,(rb-ra)/400));
+  }
 
   function atualizarRanking(){
     jogadores.sort((a,b)=>b.rating-a.rating);
     const tbody = document.getElementById('ranking');
     tbody.innerHTML='';
+
     jogadores.forEach((j,i)=>{
-      tbody.innerHTML += `<tr><td>${i+1}</td><td>${j.nome}</td><td>${Math.round(j.rating)}</td><td>${j.v || 0}</td><td>${j.d || 0}</td></tr>`;
+      tbody.innerHTML += `
+        <tr>
+          <td>${i+1}</td>
+          <td>${j.nome}</td>
+          <td>${Math.round(j.rating)}</td>
+          <td><input type="number" value="${j.v}" onchange="editarVD(${i}, 'v', this.value)" style="width:60px"></td>
+          <td><input type="number" value="${j.d}" onchange="editarVD(${i}, 'd', this.value)" style="width:60px"></td>
+          <td><button class="btn-del" onclick="removerJogador(${i})">🗑️</button></td>
+        </tr>`;
     });
+
     atualizarSelects();
     salvar();
   }
@@ -126,17 +127,35 @@ if(!localStorage.getItem('ajusteVD_v1')){
 
   function adicionarJogador(){
     const nome = novoNome.value.trim();
-    const rating = parseInt(novoRating.value);
     if(!nome) return alert('Nome inválido');
-    jogadores.push({ nome, rating, v: 0, d: 0 });
+
+    jogadores.push({
+      nome,
+      rating: parseInt(novoRating.value),
+      v: parseInt(novoV.value),
+      d: parseInt(novoD.value)
+    });
+
     novoNome.value='';
     atualizarRanking();
+  }
+
+  function removerJogador(i){
+    if(!confirm('Remover este jogador?')) return;
+    jogadores.splice(i,1);
+    atualizarRanking();
+  }
+
+  function editarVD(i, campo, valor){
+    jogadores[i][campo] = parseInt(valor) || 0;
+    salvar();
   }
 
   function registrarPartida(){
     const ia = jogadorA.value;
     const ib = jogadorB.value;
     if(ia===ib) return alert('Jogadores iguais');
+
     const sa = parseFloat(resultado.value);
     const sb = 1 - sa;
 
@@ -149,13 +168,11 @@ if(!localStorage.getItem('ajusteVD_v1')){
     jogadores[ia].rating = ra + K*(sa-ea);
     jogadores[ib].rating = rb + K*(sb-eb);
 
-    // Atualiza vitórias e derrotas
     if(sa === 1){ jogadores[ia].v++; jogadores[ib].d++; }
     if(sa === 0){ jogadores[ib].v++; jogadores[ia].d++; }
 
-    let textoResultado = sa==1 ? '1-0' : sa==0.5 ? '½-½' : '0-1';
-
-    historico.unshift({ a: jogadores[ia].nome, b: jogadores[ib].nome, r: textoResultado });
+    const rtxt = sa==1 ? '1-0' : sa==0.5 ? '½-½' : '0-1';
+    historico.unshift({ a:jogadores[ia].nome, b:jogadores[ib].nome, r:rtxt });
 
     atualizarRanking();
     atualizarHistorico();
