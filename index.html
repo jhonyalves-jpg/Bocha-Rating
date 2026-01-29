@@ -16,6 +16,27 @@
     button { cursor:pointer; }
     .btn-del { background:#c0392b; color:#fff; border:none; padding:5px 8px; }
     .footer { text-align:center; font-size:14px; color:#666; margin-top:30px; }
+
+    /* Admin */
+    .admin-toggle {
+      position:fixed;
+      bottom:20px;
+      right:20px;
+      background:#222;
+      color:#fff;
+      border:none;
+      padding:10px 14px;
+      border-radius:50px;
+    }
+    .admin-panel {
+      display:none;
+      max-width:900px;
+      margin:30px auto;
+      background:#fff;
+      padding:15px;
+      box-shadow:0 2px 6px rgba(0,0,0,.2);
+      border:2px dashed #444;
+    }
   </style>
 </head>
 <body>
@@ -43,6 +64,7 @@
   <button onclick="registrarPartida()">Salvar Partida</button>
 </div>
 
+<!-- TABELA PUBLICA -->
 <table>
   <thead>
     <tr>
@@ -51,11 +73,29 @@
       <th>Rating</th>
       <th>V</th>
       <th>D</th>
-      <th>Ações</th>
     </tr>
   </thead>
   <tbody id="ranking"></tbody>
 </table>
+
+<!-- PAINEL ADMIN -->
+<div class="admin-panel" id="adminPanel">
+  <h2>⚙️ Painel Administrativo</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Jogador</th>
+        <th>Rating</th>
+        <th>V</th>
+        <th>D</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody id="adminTabela"></tbody>
+  </table>
+</div>
+
+<button class="admin-toggle" onclick="toggleAdmin()">⚙️ Admin</button>
 
 <div class="box">
   <h2>📜 Histórico de Partidas</h2>
@@ -97,14 +137,29 @@
           <td>${i+1}</td>
           <td>${j.nome}</td>
           <td>${Math.round(j.rating)}</td>
-          <td><input type="number" value="${j.v}" onchange="editarVD(${i}, 'v', this.value)" style="width:60px"></td>
-          <td><input type="number" value="${j.d}" onchange="editarVD(${i}, 'd', this.value)" style="width:60px"></td>
-          <td><button class="btn-del" onclick="removerJogador(${i})">🗑️</button></td>
+          <td>${j.v}</td>
+          <td>${j.d}</td>
         </tr>`;
     });
 
+    atualizarAdmin();
     atualizarSelects();
     salvar();
+  }
+
+  function atualizarAdmin(){
+    const t = document.getElementById('adminTabela');
+    t.innerHTML='';
+    jogadores.forEach((j,i)=>{
+      t.innerHTML += `
+        <tr>
+          <td>${j.nome}</td>
+          <td>${Math.round(j.rating)}</td>
+          <td><input type="number" value="${j.v}" onchange="editarVD(${i},'v',this.value)" style="width:60px"></td>
+          <td><input type="number" value="${j.d}" onchange="editarVD(${i},'d',this.value)" style="width:60px"></td>
+          <td><button class="btn-del" onclick="removerJogador(${i})">🗑️</button></td>
+        </tr>`;
+    });
   }
 
   function atualizarHistorico(){
@@ -146,9 +201,10 @@
     atualizarRanking();
   }
 
-  function editarVD(i, campo, valor){
+  function editarVD(i,campo,valor){
     jogadores[i][campo] = parseInt(valor) || 0;
     salvar();
+    atualizarRanking();
   }
 
   function registrarPartida(){
@@ -176,6 +232,11 @@
 
     atualizarRanking();
     atualizarHistorico();
+  }
+
+  function toggleAdmin(){
+    const p = document.getElementById('adminPanel');
+    p.style.display = p.style.display === 'none' ? 'block' : 'none';
   }
 
   atualizarRanking();
