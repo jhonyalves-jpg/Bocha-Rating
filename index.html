@@ -5,87 +5,108 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Ratings de Xadrez</title>
   <style>
-    body {
-      font-family: Arial, Helvetica, sans-serif;
-      background: #f4f6f8;
-      margin: 0;
-      padding: 20px;
-    }
-    h1 {
-      text-align: center;
-    }
-    table {
-      width: 100%;
-      max-width: 600px;
-      margin: 20px auto;
-      border-collapse: collapse;
-      background: white;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-    th, td {
-      padding: 12px;
-      text-align: center;
-      border-bottom: 1px solid #ddd;
-    }
-    th {
-      background: #222;
-      color: white;
-    }
-    tr:nth-child(even) {
-      background: #f2f2f2;
-    }
-    .footer {
-      text-align: center;
-      font-size: 14px;
-      color: #666;
-      margin-top: 30px;
-    }
+    body { font-family: Arial, Helvetica, sans-serif; background:#f4f6f8; margin:0; padding:20px; }
+    h1,h2 { text-align:center; }
+    table { width:100%; max-width:700px; margin:20px auto; border-collapse:collapse; background:#fff; box-shadow:0 2px 6px rgba(0,0,0,.1);}    
+    th,td { padding:10px; text-align:center; border-bottom:1px solid #ddd; }
+    th { background:#222; color:#fff; }
+    tr:nth-child(even){ background:#f2f2f2; }
+    .box { max-width:700px; margin:20px auto; background:#fff; padding:15px; box-shadow:0 2px 6px rgba(0,0,0,.1); }
+    input, select, button { padding:8px; margin:5px; }
+    button { cursor:pointer; }
+    .footer { text-align:center; font-size:14px; color:#666; margin-top:30px; }
   </style>
 </head>
 <body>
 
 <h1>🏆 Ranking de Ratings</h1>
 
+<div class="box">
+  <h2>➕ Adicionar Jogador</h2>
+  <input id="novoNome" placeholder="Nome do jogador" />
+  <input id="novoRating" type="number" placeholder="Rating inicial" value="1500" />
+  <button onclick="adicionarJogador()">Adicionar</button>
+</div>
+
+<div class="box">
+  <h2>♟️ Registrar Partida</h2>
+  <select id="jogadorA"></select>
+  <select id="resultado">
+    <option value="1">Vitória A</option>
+    <option value="0.5">Empate</option>
+    <option value="0">Derrota A</option>
+  </select>
+  <select id="jogadorB"></select>
+  <button onclick="registrarPartida()">Salvar Partida</button>
+</div>
+
 <table>
   <thead>
-    <tr>
-      <th>#</th>
-      <th>Jogador</th>
-      <th>Rating</th>
-    </tr>
+    <tr><th>#</th><th>Jogador</th><th>Rating</th></tr>
   </thead>
   <tbody id="ranking"></tbody>
 </table>
 
-<div class="footer">
-  Sistema de rating K=20 • Atualizado manualmente
-</div>
+<div class="footer">Sistema de rating Elo • K=20 • Dados salvos no navegador</div>
 
 <script>
-  const jogadores = [
-    { nome: "Jhony", rating: 1600 },
-    { nome: "Bruno", rating: 1500 },
-    { nome: "Thor", rating: 1450 },
-    { nome: "Shigaki", rating: 1520 },
-    { nome: "Vicente", rating: 1480 },
-    { nome: "Arcari", rating: 1490 },
-    { nome: "Ademir", rating: 1400 },
-    { nome: "Vitor", rating: 1420 }
-  ];
+  const K = 20;
+  let jogadores = JSON.parse(localStorage.getItem('jogadores')) || [];
 
-  jogadores.sort((a, b) => b.rating - a.rating);
+  function salvar(){ localStorage.setItem('jogadores', JSON.stringify(jogadores)); }
 
-  const tbody = document.getElementById("ranking");
+  function esperado(ra, rb){ return 1 / (1 + Math.pow(10,(rb-ra)/400)); }
 
-  jogadores.forEach((jogador, index) => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${index + 1}</td>
-      <td>${jogador.nome}</td>
-      <td>${jogador.rating}</td>
-    `;
-    tbody.appendChild(tr);
-  });
+  function atualizarRanking(){
+    jogadores.sort((a,b)=>b.rating-a.rating);
+    const tbody = document.getElementById('ranking');
+    tbody.innerHTML='';
+    jogadores.forEach((j,i)=>{
+      tbody.innerHTML += `<tr><td>${i+1}</td><td>${j.nome}</td><td>${Math.round(j.rating)}</td></tr>`;
+    });
+    atualizarSelects();
+    salvar();
+  }
+
+  function atualizarSelects(){
+    const a = document.getElementById('jogadorA');
+    const b = document.getElementById('jogadorB');
+    a.innerHTML = b.innerHTML = '';
+    jogadores.forEach((j,i)=>{
+      a.innerHTML += `<option value="${i}">${j.nome}</option>`;
+      b.innerHTML += `<option value="${i}">${j.nome}</option>`;
+    });
+  }
+
+  function adicionarJogador(){
+    const nome = novoNome.value.trim();
+    const rating = parseInt(novoRating.value);
+    if(!nome) return alert('Nome inválido');
+    jogadores.push({nome, rating});
+    novoNome.value='';
+    atualizarRanking();
+  }
+
+  function registrarPartida(){
+    const ia = jogadorA.value;
+    const ib = jogadorB.value;
+    if(ia===ib) return alert('Jogadores iguais');
+    const sa = parseFloat(resultado.value);
+    const sb = 1 - sa;
+
+    const ra = jogadores[ia].rating;
+    const rb = jogadores[ib].rating;
+
+    const ea = esperado(ra, rb);
+    const eb = esperado(rb, ra);
+
+    jogadores[ia].rating = ra + K*(sa-ea);
+    jogadores[ib].rating = rb + K*(sb-eb);
+
+    atualizarRanking();
+  }
+
+  atualizarRanking();
 </script>
 
 </body>
