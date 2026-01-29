@@ -25,6 +25,8 @@
   <h2>➕ Adicionar Jogador</h2>
   <input id="novoNome" placeholder="Nome do jogador" />
   <input id="novoRating" type="number" placeholder="Rating inicial" value="1500" />
+  <input id="novoV" type="number" placeholder="Vitórias" value="0" />
+  <input id="novoD" type="number" placeholder="Derrotas" value="0" />
   <button onclick="adicionarJogador()">Adicionar</button>
 </div>
 
@@ -42,7 +44,7 @@
 
 <table>
   <thead>
-    <tr><th>#</th><th>Jogador</th><th>Rating</th><th>V</th><th>D</th></tr>
+    <tr><th>#</th><th>Jogador</th><th>Rating</th><th>V</th><th>D</th><th>Ações</th></tr>
   </thead>
   <tbody id="ranking"></tbody>
 </table>
@@ -100,7 +102,14 @@ if(!localStorage.getItem('ajusteVD_v1')){
     const tbody = document.getElementById('ranking');
     tbody.innerHTML='';
     jogadores.forEach((j,i)=>{
-      tbody.innerHTML += `<tr><td>${i+1}</td><td>${j.nome}</td><td>${Math.round(j.rating)}</td><td>${j.v || 0}</td><td>${j.d || 0}</td></tr>`;
+      tbody.innerHTML += `<tr>
+  <td>${i+1}</td>
+  <td>${j.nome}</td>
+  <td>${Math.round(j.rating)}</td>
+  <td>${j.v}</td>
+  <td>${j.d}</td>
+  <td><button onclick=\"removerJogador(${i})\">🗑️</button></td>
+</tr>`;
     });
     atualizarSelects();
     salvar();
@@ -125,15 +134,26 @@ if(!localStorage.getItem('ajusteVD_v1')){
   }
 
   function adicionarJogador(){
-    const nome = novoNome.value.trim();
-    const rating = parseInt(novoRating.value);
-    if(!nome) return alert('Nome inválido');
-    jogadores.push({ nome, rating, v: 0, d: 0 });
+  const nome = novoNome.value.trim();
+  const rating = parseInt(novoRating.value);
+  const v = parseInt(novoV.value) || 0;
+  const d = parseInt(novoD.value) || 0;
+  if(!nome) return alert('Nome inválido');
+  jogadores.push({ nome, rating, v, d });
+  novoNome.value=''; novoRating.value=1500; novoV.value=0; novoD.value=0;
+  atualizarRanking();
+});
     novoNome.value='';
     atualizarRanking();
   }
 
-  function registrarPartida(){
+  function removerJogador(index){
+  if(!confirm('Remover jogador?')) return;
+  jogadores.splice(index,1);
+  atualizarRanking();
+}
+
+function registrarPartida(){
     const ia = jogadorA.value;
     const ib = jogadorB.value;
     if(ia===ib) return alert('Jogadores iguais');
